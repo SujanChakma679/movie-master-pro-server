@@ -61,6 +61,7 @@ async function run() {
         res.send(result)
     })
 
+    // get the latest movies
     app.get('/latest-movies', async(req, res) =>{
       const cursor = moviesCollection.find().sort({created_at: -1}).limit(6);
       const result = await cursor.toArray();
