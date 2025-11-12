@@ -32,7 +32,7 @@ async function run() {
 
     const db = client.db('movie_db');
     const moviesCollection = db.collection('movies');
-     const usersCollection = db.collection('users');
+    const usersCollection = db.collection('users');
 
       // Users APIs 
         app.post('/users', async(req, res) =>{
@@ -56,9 +56,21 @@ async function run() {
     //get all movies
     
     app.get('/movies', async(req, res) =>{
-        const cursor = moviesCollection.find()
+        const cursor = moviesCollection.find();  //.sort({created_at: -1});
         const result = await cursor.toArray();
         res.send(result)
+    })
+
+    app.get('/latest-movies', async(req, res) =>{
+      const cursor = moviesCollection.find().sort({created_at: -1}).limit(6);
+      const result = await cursor.toArray();
+      res.send(result);
+    })
+
+      app.get('/top-rated-movies', async(req, res) =>{
+      const cursor = moviesCollection.find().sort({rating: -1}).limit(6);
+      const result = await cursor.toArray();
+      res.send(result);
     })
 
     //get the specific user movies
