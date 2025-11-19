@@ -27,12 +27,13 @@ app.get('/', (req,res) =>{
 
 async function run() {
   try {
-    // Connect the client to the server	(optional starting in v4.7)
+
     await client.connect();
 
     const db = client.db('movie_db');
     const moviesCollection = db.collection('movies');
     const usersCollection = db.collection('users');
+    const watchlistCollection = db.collection('watch-list');
 
       // Users APIs 
         app.post('/users', async(req, res) =>{
@@ -52,6 +53,61 @@ async function run() {
           }
         })
 
+        //WatchList API
+        app.post('/watchlist', async (req, res) => {
+  try {
+    const { userEmail, movieId, title, posterUrl, genre, releaseYear, rating } = req.body;
+
+    if (!userEmail || !movieId) {
+      return res.status(400).send({ message: "userEmail and movieId are required" });
+    }
+
+    // prevent duplicate for same user + movie
+    const existing = await watchlistCollection.findOne({ userEmail, movieId });
+    if (existing) {
+      return res.status(409).send({ message: "Movie already in watchlist" });
+    }
+
+    const doc = {
+      userEmail,
+      movieId,
+      title,
+      posterUrl,
+      genre,
+      releaseYear,
+      rating,
+      createdAt: new Date()
+    };
+
+    const result = await watchlistCollection.insertOne(doc);
+    res.send(result);
+  } catch (error) {
+    console.error(error);
+    res.status(500).send({ message: "Failed to add to watchlist" });
+  }
+});
+
+// myWatchList - get watchlist for a user
+app.get('/watchlist', async (req, res) => {
+  try {
+    const userEmail = req.query.email;  // /watchlist?email=...
+
+    if (!userEmail) {
+      return res.status(400).send({ message: "email query is required" });
+    }
+
+    const cursor = watchlistCollection.find({ userEmail });
+    const result = await cursor.toArray();
+    res.send(result);
+  } catch (error) {
+    console.error(error);
+    res.status(500).send({ message: "Failed to load watchlist" });
+  }
+});
+
+
+
+
 
     //get all movies
     
@@ -60,6 +116,24 @@ async function run() {
         const result = await cursor.toArray();
         res.send(result)
     })
+
+
+//get single movie 
+app.get('/movies/:id', async (req, res) => {
+  const id = req.params.id;
+
+  const query = { _id: id };  
+  const result = await moviesCollection.findOne(query);
+
+  if (!result) {
+    return res.status(404).send({ message: 'Movie not found' });
+  }
+
+  res.send(result);
+});
+
+
+
 
     // get the latest movies
     app.get('/latest-movies', async(req, res) =>{
@@ -92,13 +166,7 @@ async function run() {
         res.send(result);
        });
 
-      //get single movie
-       app.get('/movies/:id', async (req, res) =>{
-        const id =req.params.id;
-        const query = { _id: new ObjectId(id) }
-        const result = await moviesCollection.findOne(query)
-        res.send(result);
-       })
+     
 
         //create a movie
         app.post('/movies/add', async(req, res) =>{
