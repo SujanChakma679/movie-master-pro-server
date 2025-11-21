@@ -34,6 +34,8 @@ async function run() {
     const moviesCollection = db.collection('movies');
     const usersCollection = db.collection('users');
     const watchlistCollection = db.collection('watch-list');
+    const myCollection = db.collection('my-collection');
+    
 
       // Users APIs 
         app.post('/users', async(req, res) =>{
@@ -118,6 +120,30 @@ app.get('/watchlist', async (req, res) => {
     })
 
 
+    
+// ======================================
+// GET movies for a specific user (My Collection)
+// ======================================
+app.get('/movies/my-collection', async (req, res) => {
+  try {
+    const email = req.query.email;
+
+    if (!email) {
+      return res.status(400).send({ message: 'Email query is required, e.g. /movies/my-collection?email=abc@gmail.com' });
+    }
+
+    const cursor = myCollection.find({ email }); // filter by user email
+    const result = await cursor.toArray();
+    res.send(result);
+  } catch (error) {
+    console.error('Error fetching my collection:', error);
+    res.status(500).send({ message: 'Failed to load your collection' });
+  }
+});
+
+
+
+
 //get single movie 
 app.get('/movies/:id', async (req, res) => {
   const id = req.params.id;
@@ -148,32 +174,65 @@ app.get('/movies/:id', async (req, res) => {
       res.send(result);
     })
 
-    //get the specific user movies
+     
+// // Add movie
+// app.post('/movies/add', async (req, res) => {
+//   const newMovie = req.body;
 
-    app.get('/movies/my-collection', async (req, res) =>{
+//   if (!newMovie.email) {
+//     return res.status(400).send({ message: 'User email required' });
+//   }
+
+//   try {
+//     const result = await myCollection.insertOne(newMovie);
+//     res.send(result);
+//   } catch (err) {
+//     res.status(500).send({ message: 'Failed to add movie' });
+//   }
+// });
+
+// // Get movies by user
+// app.get('/movies/my-collection', async (req, res) => {
+//   const email = req.query.email;
+//   if (!email) return res.status(400).send({ message: 'Email query is required' });
+
+//   try {
+//     const movies = await myCollection.find({ email }).toArray();
+//     if (movies.length === 0) return res.status(404).send({ message: 'No movies found' });
+//     res.send(movies);
+//   } catch (err) {
+//     res.status(500).send({ message: 'Failed to fetch movies' });
+//   }
+// });
+
+// =========================
+// CREATE a movie (Add Movie)
+// =========================
+app.post('/movies/add', async (req, res) => {
+  try {
+    const newMovie = req.body;
+
+    // basic validation
+    if (!newMovie.title || !newMovie.posterUrl || !newMovie.genre || !newMovie.releaseYear || !newMovie.rating || !newMovie.email) {
+      return res.status(400).send({ message: 'All fields including user email are required' });
+    }
+
+    // optional: add created_at for sorting latest movies
+    newMovie.created_at = new Date();
+
+    const result = await myCollection.insertOne(newMovie);
+    res.send(result);
+  } catch (error) {
+    console.error('Error adding movie:', error);
+    res.status(500).send({ message: 'Failed to add movie' });
+  }
+});
 
 
-        console.log(req.query)
-        const email = req.query.email;
-        const query = {}
-        if(email){
-          query.email = email;
-        }
-
-
-        const cursor = moviesCollection.find(query);
-        const result = await cursor.toArray();
-        res.send(result);
-       });
 
      
 
-        //create a movie
-        app.post('/movies/add', async(req, res) =>{
-            const newMovie = req.body;
-            const result = await moviesCollection.insertOne(newMovie)
-            res.send(result);
-    })
+     
 
     //delete a movie
         app.delete('/movies/:id', async(req, res) =>{
