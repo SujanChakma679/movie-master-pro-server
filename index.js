@@ -1,5 +1,6 @@
 const express = require("express");
 const cors = require("cors");
+require ('dotenv').config();
 
 // for connect to the database
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
@@ -7,12 +8,14 @@ const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const app = express();
 const port = process.env.PORT || 3000;
 
+
 // middleware
 app.use(cors());
 app.use(express.json());
 
-const uri =
-  "mongodb+srv://simpleDBUser:Hruc3M2SO2eiQIJh@cluster33.pzhkenb.mongodb.net/?appName=Cluster33";
+
+  const uri =
+  `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster33.pzhkenb.mongodb.net/?appName=Cluster33`;
 
 const client = new MongoClient(uri, {
   serverApi: {
@@ -34,7 +37,7 @@ async function run() {
     const moviesCollection = db.collection("movies");
     const usersCollection = db.collection("users");
     const watchlistCollection = db.collection("watch-list");
-    // const myCollection = db.collection("my-collection");
+  
 
     // Users APIs
     app.post("/users", async (req, res) => {
@@ -102,29 +105,6 @@ async function run() {
         res.status(500).send({ message: "Failed to add to watchlist" });
       }
     });
-
-
-    // search bar api
-//     app.get("/movies/search", async (req, res) => {
-//   const query = req.query.query || "";
-  
-//   let movies = await moviesCollection
-//     .find({
-//       $or: [
-//         { title: { $regex: query, $options: "i" } },
-//         { genre: { $regex: query, $options: "i" } },
-//       ],
-//     })
-//     .toArray();
-
-//   // Ensure genre is always array
-//   movies = movies.map((m) => ({
-//     ...m,
-//     genre: Array.isArray(m.genre) ? m.genre : [m.genre].filter(Boolean),
-//   }));
-
-//   res.send(movies);
-// });
 
 
 
@@ -320,7 +300,7 @@ app.delete("/watchlist/:id", async (req, res) => {
 
 
     // Send a ping to confirm a successful connection
-    await client.db("admin").command({ ping: 1 });
+    // await client.db("admin").command({ ping: 1 });
     console.log(
       "Pinged your deployment. You successfully connected to MongoDB!"
     );
