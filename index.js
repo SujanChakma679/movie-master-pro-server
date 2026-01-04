@@ -31,7 +31,7 @@ app.get("/", (req, res) => {
 
 async function run() {
   try {
-    await client.connect();
+    // await client.connect();
 
     const db = client.db("movie_db");
     const moviesCollection = db.collection("movies");
@@ -198,13 +198,13 @@ app.get("/movies", async (req, res) => {
 
     // get the latest movies
     app.get("/latest-movies", async (req, res) => {
-      const cursor = moviesCollection.find().sort({ created_at: -1 }).limit(6);
+      const cursor = moviesCollection.find().sort({ created_at: -1 }).limit(8);
       const result = await cursor.toArray();
       res.send(result);
     });
 
     app.get("/top-rated-movies", async (req, res) => {
-      const cursor = moviesCollection.find().sort({ rating: -1 }).limit(6);
+      const cursor = moviesCollection.find().sort({ rating: -1 }).limit(8);
       const result = await cursor.toArray();
       res.send(result);
     });
